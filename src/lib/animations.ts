@@ -22,3 +22,64 @@ export const staggeredAnimation = (index: number, staggerAmount = 50) => {
     }
   };
 };
+
+export const usePlaybackAnimation = (isPlaying: boolean, duration: number) => {
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    if (!isPlaying) return;
+    
+    let startTime: number;
+    let animationFrame: number;
+    
+    const animate = (timestamp: number) => {
+      if (startTime === undefined) {
+        startTime = timestamp;
+      }
+      
+      const elapsed = timestamp - startTime;
+      const newProgress = Math.min(elapsed / (duration * 1000), 1);
+      
+      setProgress(newProgress);
+      
+      if (newProgress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [isPlaying, duration]);
+  
+  return progress;
+};
+
+export const useTypingAnimation = (text: string, delay = 30) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+  
+  useEffect(() => {
+    if (!text) return;
+    
+    let currentIndex = 0;
+    setDisplayedText('');
+    setIsComplete(false);
+    
+    const intervalId = setInterval(() => {
+      if (currentIndex < text.length) {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        currentIndex++;
+      } else {
+        setIsComplete(true);
+        clearInterval(intervalId);
+      }
+    }, delay);
+    
+    return () => clearInterval(intervalId);
+  }, [text, delay]);
+  
+  return { displayedText, isComplete };
+};

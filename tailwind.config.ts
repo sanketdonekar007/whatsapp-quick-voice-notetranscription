@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -73,7 +72,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				whatsapp: {
+					'light-green': '#DCF8C6',
+					'teal-green': '#128C7E',
+					'teal-green-dark': '#075E54',
+					'light-gray': '#F0F0F0',
+					'chat-bg': '#E5DDD5',
+					'dark-gray': '#262D31',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -152,6 +159,11 @@ export default {
 						filter: 'blur(0)',
 						opacity: '1'
 					}
+				},
+				'audio-wave': {
+					'0%': { transform: 'scaleY(0.3)' },
+					'50%': { transform: 'scaleY(1)' },
+					'100%': { transform: 'scaleY(0.3)' }
 				}
 			},
 			animation: {
@@ -162,7 +174,8 @@ export default {
 				'slide-up': 'slide-up 0.3s ease-out',
 				'slide-down': 'slide-down 0.3s ease-out',
 				'scale-in': 'scale-in 0.3s ease-out',
-				'blur-in': 'blur-in 0.3s ease-out'
+				'blur-in': 'blur-in 0.3s ease-out',
+				'audio-wave': 'audio-wave 1.2s ease-in-out infinite'
 			}
 		}
 	},
