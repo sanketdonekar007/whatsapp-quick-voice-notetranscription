@@ -67,6 +67,9 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
+      // Hide search when audio ends
+      setShowSearch(false);
+      if (onShowSearch) onShowSearch(false);
     };
     
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -76,14 +79,20 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [onShowSearch]);
   
   // Effect to show transcription and search when playing
   useEffect(() => {
     if (onShowTranscript) {
       onShowTranscript(isPlaying);
     }
-  }, [isPlaying, onShowTranscript]);
+    
+    // Update search visibility based on playing state
+    if (!isPlaying && showSearch) {
+      setShowSearch(false);
+      if (onShowSearch) onShowSearch(false);
+    }
+  }, [isPlaying, onShowTranscript, onShowSearch, showSearch]);
   
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -91,22 +100,25 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
     
     if (isPlaying) {
       audio.pause();
+      // Hide search when paused
+      setShowSearch(false);
+      if (onShowSearch) onShowSearch(false);
     } else {
       audio.play().catch(error => {
         console.error('Error playing audio:', error);
       });
       if (onPlay) onPlay();
+      
+      // Only show search after clicking play
+      if (!showSearch) {
+        setTimeout(() => {
+          setShowSearch(true);
+          if (onShowSearch) onShowSearch(true);
+        }, 400); // Slight delay to allow transcription to animate in first
+      }
     }
     
     setIsPlaying(!isPlaying);
-    
-    // Only show search after clicking play
-    if (!isPlaying && !showSearch) {
-      setTimeout(() => {
-        setShowSearch(true);
-        if (onShowSearch) onShowSearch(true);
-      }, 400); // Slight delay to allow transcription to animate in first
-    }
   };
   
   const togglePlaybackRate = () => {
@@ -176,10 +188,10 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
         </div>
       </div>
       
-      {/* Show search only after play button is clicked */}
-      {showSearch && (
+      {/* Show search only when playing */}
+      {showSearch && isPlaying && (
         <div className="ml-12 mt-2">
-          <WhatsAppSearch onSearch={handleSearch} isVisible={showSearch} />
+          <WhatsAppSearch onSearch={handleSearch} isVisible={showSearch && isPlaying} />
         </div>
       )}
     </div>
