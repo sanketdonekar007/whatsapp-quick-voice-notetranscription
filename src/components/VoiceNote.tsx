@@ -46,8 +46,11 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
           key={i}
           className={`audio-bar ${isPlaying ? 'animate-audio-wave' : ''}`}
           style={{ 
+            height: '100%',
             transform: `scaleY(${height})`,
-            animationDelay
+            animationDelay,
+            // Ensure static appearance when not playing
+            transition: 'transform 0.2s ease'
           }}
         />
       );
