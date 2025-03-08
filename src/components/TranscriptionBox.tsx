@@ -1,19 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAnimationOnMount } from '@/lib/animations';
+import { Copy, Check } from 'lucide-react';
+import { toast } from "sonner";
 
 interface TranscriptionBoxProps {
   text: string;
   searchQuery?: string;
   isExpanded?: boolean;
+  isVisible: boolean;
 }
 
 const TranscriptionBox: React.FC<TranscriptionBoxProps> = ({ 
   text, 
   searchQuery = '', 
-  isExpanded = false 
+  isExpanded: initialExpanded = false,
+  isVisible = false
 }) => {
-  const [expanded, setExpanded] = useState(isExpanded);
+  const [expanded, setExpanded] = useState(initialExpanded);
+  const [copied, setCopied] = useState(false);
   const isAnimated = useAnimationOnMount(200);
   
   // Function to highlight matching text
@@ -39,21 +44,50 @@ const TranscriptionBox: React.FC<TranscriptionBoxProps> = ({
     );
   };
   
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      toast.success("Transcription copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  
+  if (!isVisible) return null;
+  
   return (
-    <div className={`w-full max-w-xs ml-12 mt-1 transition-default ${isAnimated ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="bg-gray-100 rounded-lg p-2 text-sm text-gray-700">
-        <p className={`${expanded ? '' : 'line-clamp-3'}`}>
+    <div className={`w-full max-w-xs ml-12 mt-1 transition-all duration-300 ${isAnimated ? 'opacity-100 transform-none' : 'opacity-0 translate-y-2'}`}>
+      <div className="bg-gray-100 rounded-lg p-2 text-sm text-gray-700 relative">
+        <div className={`${expanded ? '' : 'line-clamp-3'}`}>
           {highlightText(text, searchQuery)}
-        </p>
+        </div>
         
-        {text.length > 150 && (
+        <div className="flex justify-between items-center mt-1">
+          {text.length > 150 && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-whatsapp-teal-green text-xs font-medium"
+            >
+              {expanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
+          
           <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-whatsapp-teal-green text-xs font-medium mt-1"
+            onClick={copyToClipboard}
+            className="text-whatsapp-teal-green ml-auto flex items-center gap-1 text-xs font-medium"
           >
-            {expanded ? 'Show less' : 'Show more'}
+            {copied ? (
+              <>
+                <Check size={12} />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy size={12} />
+                <span>Copy</span>
+              </>
+            )}
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

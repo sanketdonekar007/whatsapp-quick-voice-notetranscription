@@ -7,7 +7,7 @@ const WhatsAppHeader: React.FC = () => {
   const isAnimated = useAnimationOnMount();
 
   return (
-    <div className={`transition-default fixed top-0 left-0 right-0 z-10 bg-whatsapp-teal-green-dark text-white p-2 flex items-center gap-2 ${isAnimated ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`transition-default fixed top-0 left-0 right-0 z-20 bg-whatsapp-teal-green-dark text-white p-2 flex items-center gap-2 ${isAnimated ? 'opacity-100' : 'opacity-0'}`}>
       <button className="p-2 rounded-full hover:bg-white/10">
         <ArrowLeft size={20} />
       </button>

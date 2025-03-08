@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import WhatsAppHeader from '@/components/WhatsAppHeader';
 import VoiceNote from '@/components/VoiceNote';
 import TranscriptionBox from '@/components/TranscriptionBox';
-import WhatsAppSearch from '@/components/WhatsAppSearch';
 import TranscriptionSettings from '@/components/TranscriptionSettings';
 import { Settings } from 'lucide-react';
 
@@ -36,17 +35,53 @@ const mockVoiceNotes = [
 ];
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [transcriptionEnabled, setTranscriptionEnabled] = useState(true);
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState('english');
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  const [visibleTranscripts, setVisibleTranscripts] = useState<Record<string, boolean>>({});
+  const [visibleSearchbars, setVisibleSearchbars] = useState<Record<string, boolean>>({});
   const messageEndRef = useRef<HTMLDivElement>(null);
-  
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
   
   const handleVoiceNotePlay = (id: string) => {
     setPlayingId(id);
+  };
+  
+  const handleShowTranscript = (id: string, show: boolean) => {
+    if (transcriptionEnabled) {
+      setVisibleTranscripts(prev => ({
+        ...prev,
+        [id]: show
+      }));
+    }
+  };
+  
+  const handleShowSearch = (id: string, show: boolean) => {
+    if (transcriptionEnabled) {
+      setVisibleSearchbars(prev => ({
+        ...prev,
+        [id]: show
+      }));
+    }
+  };
+  
+  const handleSearch = (id: string, query: string) => {
+    setSearchQueries(prev => ({
+      ...prev,
+      [id]: query
+    }));
+  };
+  
+  const handleSettingsChange = (settings: { autoTranscribe: boolean, language: string }) => {
+    setTranscriptionEnabled(settings.autoTranscribe);
+    setTranscriptionLanguage(settings.language);
+    
+    // If transcription is disabled, hide all transcripts and search bars
+    if (!settings.autoTranscribe) {
+      setVisibleTranscripts({});
+      setVisibleSearchbars({});
+    }
   };
   
   // Scroll to bottom on mount
@@ -71,11 +106,8 @@ const Index = () => {
         </button>
       </div>
       
-      {/* Search */}
-      <WhatsAppSearch onSearch={handleSearch} />
-      
       {/* Chat Content */}
-      <div className="flex-1 pt-[120px] pb-4 px-4 overflow-y-auto">
+      <div className="flex-1 pt-[64px] pb-4 px-4 overflow-y-auto">
         <div className="max-w-md mx-auto space-y-6">
           {/* Date indicator */}
           <div className="flex justify-center">
@@ -93,11 +125,15 @@ const Index = () => {
                 isOutgoing={note.isOutgoing}
                 timestamp={note.timestamp}
                 onPlay={() => handleVoiceNotePlay(note.id)}
+                onShowTranscript={(show) => handleShowTranscript(note.id, show)}
+                onShowSearch={(show) => handleShowSearch(note.id, show)}
+                onSearchChange={(query) => handleSearch(note.id, query)}
               />
               <TranscriptionBox 
                 text={note.transcription}
-                searchQuery={searchQuery}
+                searchQuery={searchQueries[note.id] || ''}
                 isExpanded={playingId === note.id}
+                isVisible={visibleTranscripts[note.id] || false}
               />
             </div>
           ))}
@@ -108,7 +144,10 @@ const Index = () => {
       
       {/* Settings Modal */}
       {showSettings && (
-        <TranscriptionSettings onClose={() => setShowSettings(false)} />
+        <TranscriptionSettings 
+          onClose={() => setShowSettings(false)} 
+          onSettingsChange={handleSettingsChange}
+        />
       )}
     </div>
   );

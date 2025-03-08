@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Clock, Check, Forward, Rotate3D } from 'lucide-react';
+import { Play, Pause, Check } from 'lucide-react';
 import { useAnimationOnMount } from '@/lib/animations';
+import WhatsAppSearch from './WhatsAppSearch';
 
 interface VoiceNoteProps {
   audioUrl: string;
@@ -9,18 +10,25 @@ interface VoiceNoteProps {
   isOutgoing?: boolean;
   onPlay?: () => void;
   timestamp?: string;
+  onShowTranscript?: (show: boolean) => void;
+  onShowSearch?: (show: boolean) => void;
+  onSearchChange?: (query: string) => void;
 }
 
 const VoiceNote: React.FC<VoiceNoteProps> = ({ 
   audioUrl, 
   duration, 
-  isOutgoing = true,
+  isOutgoing = false,
   onPlay,
-  timestamp = "10:30 AM"
+  timestamp = "10:30 AM",
+  onShowTranscript,
+  onShowSearch,
+  onSearchChange
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSearch, setShowSearch] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const isAnimated = useAnimationOnMount();
   
@@ -70,6 +78,13 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
     };
   }, []);
   
+  // Effect to show transcription and search when playing
+  useEffect(() => {
+    if (onShowTranscript) {
+      onShowTranscript(isPlaying);
+    }
+  }, [isPlaying, onShowTranscript]);
+  
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -84,6 +99,14 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
     }
     
     setIsPlaying(!isPlaying);
+    
+    // Only show search after clicking play
+    if (!isPlaying && !showSearch) {
+      setTimeout(() => {
+        setShowSearch(true);
+        if (onShowSearch) onShowSearch(true);
+      }, 400); // Slight delay to allow transcription to animate in first
+    }
   };
   
   const togglePlaybackRate = () => {
@@ -102,9 +125,15 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
+  const handleSearch = (query: string) => {
+    if (onSearchChange) {
+      onSearchChange(query);
+    }
+  };
+  
   return (
-    <div className={`w-full max-w-xs transition-default ${isAnimated ? 'opacity-100' : 'opacity-0'}`}>
-      <div className={isOutgoing ? 'whatsapp-bubble-out ml-auto' : 'whatsapp-bubble-in'}>
+    <div className={`w-full max-w-xs transition-default ${isOutgoing ? 'ml-auto' : ''} ${isAnimated ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={isOutgoing ? 'whatsapp-bubble-out' : 'whatsapp-bubble-in'}>
         <audio ref={audioRef} src={audioUrl} preload="metadata" />
         
         <div className="flex items-center gap-2">
@@ -138,7 +167,6 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
         
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center gap-1 text-gray-500">
-            <Clock size={12} />
             <span className="text-xs">{timestamp}</span>
           </div>
           
@@ -147,6 +175,13 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({
           )}
         </div>
       </div>
+      
+      {/* Show search only after play button is clicked */}
+      {showSearch && (
+        <div className="ml-12 mt-2">
+          <WhatsAppSearch onSearch={handleSearch} isVisible={showSearch} />
+        </div>
+      )}
     </div>
   );
 };
